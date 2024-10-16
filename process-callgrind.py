@@ -6,11 +6,12 @@ import sys
 
 def cmdline_help():
     print('-i x   callgrind output file to process')
+    print('-c     include context')
     print('-f     filter output')
     print('-h     this output')
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], 'i:fh')
+    opts, args = getopt.getopt(sys.argv[1:], 'i:cfh')
 except getopt.GetoptError as err:
     print(err)
     cmdline_help()
@@ -18,12 +19,15 @@ except getopt.GetoptError as err:
 
 input_file = None
 filter_output = False
+incl_context = False
 
 for o, a in opts:
     if o == '-i':
         input_file = a
     elif o == '-f':
         filter_output = True
+    elif o == '-c':
+        incl_context = True
     elif o == '-h':
         cmdline_help()
         sys.exit(0)
@@ -100,14 +104,14 @@ for file in data:
     header_emitted = False
     for func in data[file]:
         if func != ' contents ':
-            use_nrs = []
+            max_nr = 0
             suppress = False
             if " contents " in data[file]:
                 for ln in data[file][func]:
                     if ln > len(data[file][" contents "]):
                         suppress = True
                         break
-                    use_nrs.append(ln)
+                    max_nr = max(max_nr, ln)
             else:
                 suppress = True
 
@@ -118,10 +122,13 @@ for file in data:
 
                 print(f'<h3>{func}</h3>')
                 print(f'<table><tr><th>line number</th><th>const</th><th>contents</th></tr>')
-                for ln in sorted(use_nrs):
-                    text = html.escape(data[file][" contents "][ln - 1] if " contents " in data[file] and ln < len(data[file][" contents "]) else "")
-                    text = text.replace(' ', '&nbsp;')
-                    print(f'<tr><td>{ln}</td><td>{data[file][func][ln]}</td><td><pre>{text}</pre></td></tr>')
+                for ln in range(1, max_nr + 1):
+                    text = html.escape(data[file][" contents "][ln - 1] if " contents " in data[file] and ln <= len(data[file][" contents "]) else "")
+                    if ln in data[file][func]:
+                        print(f'<tr><td>{ln}</td><td>{data[file][func][ln]}</td><td><pre>{text}</pre></td></tr>')
+                    else:
+                        print(f'<tr><td>{ln}</td><td></td><td><pre>{text}</pre></td></tr>')
+
                 print('</table>')
 
 print('</body>')
