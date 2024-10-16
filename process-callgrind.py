@@ -89,7 +89,7 @@ fh.close()
 for file in data:
     try: 
         if file != None:
-            data[file][' contents '] = [l.strip() for l in open(file, 'r').readlines()]
+            data[file][' contents '] = [l.strip('\n') for l in open(file, 'r').readlines()]
     except FileNotFoundError as e:
         pass
 
@@ -120,6 +120,7 @@ for file in data:
                 print(f'<table><tr><th>line number</th><th>const</th><th>contents</th></tr>')
                 for ln in sorted(use_nrs):
                     text = html.escape(data[file][" contents "][ln - 1] if " contents " in data[file] and ln < len(data[file][" contents "]) else "")
+                    text = text.replace(' ', '&nbsp;')
                     print(f'<tr><td>{ln}</td><td>{data[file][func][ln]}</td><td><pre>{text}</pre></td></tr>')
                 print('</table>')
 
