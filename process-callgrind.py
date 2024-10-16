@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 
 import getopt
+import html
 import sys
 
 def cmdline_help():
@@ -63,6 +64,9 @@ for line in fh.readlines():
             continue
 
         parts = line.split()
+        if len(parts) == 1:
+            continue
+
         ln = int(parts[0])
         cost = int(parts[1])
 
@@ -96,12 +100,14 @@ for file in data:
     header_emitted = False
     for func in data[file]:
         if func != ' contents ':
+            use_nrs = []
             suppress = False
             if " contents " in data[file]:
                 for ln in data[file][func]:
                     if ln > len(data[file][" contents "]):
                         suppress = True
                         break
+                    use_nrs.append(ln)
             else:
                 suppress = True
 
@@ -112,9 +118,9 @@ for file in data:
 
                 print(f'<h3>{func}</h3>')
                 print(f'<table><tr><th>line number</th><th>const</th><th>contents</th></tr>')
-                for ln in data[file][func]:
-                    use_nr = ln - 1
-                    print(f'<tr><td>{ln}</td><td>{data[file][func][ln]}</td><td>{data[file][" contents "][use_nr] if " contents " in data[file] and use_nr < len(data[file][" contents "]) else ""}</td></tr>')
+                for ln in sorted(use_nrs):
+                    text = html.escape(data[file][" contents "][ln - 1] if " contents " in data[file] and ln < len(data[file][" contents "]) else "")
+                    print(f'<tr><td>{ln}</td><td>{data[file][func][ln]}</td><td><pre>{text}</pre></td></tr>')
                 print('</table>')
 
 print('</body>')
