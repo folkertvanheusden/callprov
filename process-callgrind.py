@@ -124,9 +124,11 @@ for file in sorted(data):
         for ln in range(1, max_nr + 1):
             text = html.escape(contents[file][ln - 1] if file in contents and ln <= len(contents[file]) else "")
             if ln in data[file] and data[file][ln] > 0:
-                fho.write(f'<tr><td>{ln}</td><td>{data[file][ln]}</td><td><pre>{text}</pre></td></tr>\n')
-            else:
+                fho.write(f'<tr style="background-color:#a0ffa0;"><td>{ln}</td><td>{data[file][ln]}</td><td><pre>{text}</pre></td></tr>\n')
+            elif text == '':
                 fho.write(f'<tr><td>{ln}</td><td>-</td><td><pre>{text}</pre></td></tr>\n')
+            else:
+                fho.write(f'<tr style="background-color:#ff6060;"><td>{ln}</td><td>-</td><td><pre>{text}</pre></td></tr>\n')
 
         fho.write('</table>\n')
 
