@@ -91,6 +91,14 @@ for file in data:
     except FileNotFoundError as e:
         pass
 
+# using this as hash-function from python3 has a different seed each run
+# from https://stackoverflow.com/questions/27522626/hash-function-in-python-3-3-returns-different-results-between-sessions
+def my_hash(text:str):
+    hash = 0
+    for ch in text:
+        hash = ( hash*281  ^ ord(ch)*997) & 0xFFFFFFFF
+    return hash
+
 fhi = open(output_dir + '/index.html', 'w')
 fhi.write('<html>\n')
 fhi.write('<body>\n')
@@ -112,7 +120,7 @@ for file in sorted(data):
         suppress = True
 
     if suppress == False or filter_output == False:
-        fname = str(abs(hash(file))) + '.html'
+        fname = str(my_hash(file)) + '.html'
         fhi.write(f'<li><a href="{fname}">{file}</a>\n')
         fho = open(output_dir + '/' + fname, 'w')
         fho.write('<html>\n')
