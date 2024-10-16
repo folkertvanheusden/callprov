@@ -6,17 +6,19 @@ import sys
 
 def cmdline_help():
     print('-i x   callgrind output file to process')
+    print('-o x   output directory (must exist)')
     print('-c     include context')
     print('-f     filter output')
     print('-h     this output')
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], 'i:cfh')
+    opts, args = getopt.getopt(sys.argv[1:], 'i:o:cfh')
 except getopt.GetoptError as err:
     print(err)
     cmdline_help()
     sys.exit(2)
 
+output_dir = None
 input_file = None
 filter_output = False
 incl_context = False
@@ -24,6 +26,8 @@ incl_context = False
 for o, a in opts:
     if o == '-i':
         input_file = a
+    elif o == '-o':
+        output_dir = a
     elif o == '-f':
         filter_output = True
     elif o == '-c':
@@ -97,8 +101,12 @@ for file in data:
     except FileNotFoundError as e:
         pass
 
-print('<html>')
-print('<body>')
+fhi = open(output_dir + '/index.html', 'w')
+fhi.write('<html>\n')
+fhi.write('<body>\n')
+fhi.write('<ul>\n')
+
+fho = None
 
 for file in data:
     header_emitted = False
@@ -117,19 +125,30 @@ for file in data:
 
             if suppress == False or filter_output == False:
                 if header_emitted == False:
-                    print(f'<h2>{file}</h2>')
+                    fname = str(abs(hash(file))) + '.html'
+                    fhi.write(f'<li><a href="{fname}">{file}</a>\n')
+                    fho = open(output_dir + '/' + fname, 'w')
+                    fho.write('<html>\n')
+                    fho.write('<body>\n')
+                    fho.write(f'<h2>{file}</h2>\n')
                     header_emitted = True
 
-                print(f'<h3>{func}</h3>')
-                print(f'<table><tr><th>line number</th><th>const</th><th>contents</th></tr>')
+                fho.write(f'<h3>{func}</h3>\n')
+                fho.write(f'<table><tr><th>line number</th><th>const</th><th>contents</th></tr>\n')
                 for ln in range(1, max_nr + 1):
                     text = html.escape(data[file][" contents "][ln - 1] if " contents " in data[file] and ln <= len(data[file][" contents "]) else "")
-                    if ln in data[file][func]:
-                        print(f'<tr><td>{ln}</td><td>{data[file][func][ln]}</td><td><pre>{text}</pre></td></tr>')
+                    if ln in data[file][func] and data[file][func][ln] > 0:
+                        fho.write(f'<tr><td>{ln}</td><td>{data[file][func][ln]}</td><td><pre>{text}</pre></td></tr>\n')
                     else:
-                        print(f'<tr><td>{ln}</td><td></td><td><pre>{text}</pre></td></tr>')
+                        fho.write(f'<tr><td>{ln}</td><td>-</td><td><pre>{text}</pre></td></tr>\n')
 
-                print('</table>')
+                fho.write('</table>\n')
+    if fho != None:
+        fho.write('</body>\n')
+        fho.write('</html>\n')
+        fho.close()
+        fho = None
 
-print('</body>')
-print('</html>')
+fhi.write('</body>\n')
+fhi.write('</html>\n')
+fhi.close()
