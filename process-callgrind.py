@@ -121,24 +121,31 @@ for file in sorted(data):
 
     if suppress == False or filter_output == False:
         fname = str(my_hash(file)) + '.html'
-        fhi.write(f'<li><a href="{fname}">{file}</a>\n')
+        fhi.write(f'<li><a href="{fname}">{file}</a>')
         fho = open(output_dir + '/' + fname, 'w')
         fho.write('<html>\n')
         fho.write('<body>\n')
         fho.write(f'<h2>{file}</h2>\n')
         header_emitted = True
 
+        hit = 0
+        total = 0
         fho.write(f'<table><tr><th>line number</th><th>const</th><th>contents</th></tr>\n')
         for ln in range(1, max_nr + 1):
             text = html.escape(contents[file][ln - 1] if file in contents and ln <= len(contents[file]) else "")
             if ln in data[file] and data[file][ln] > 0:
                 fho.write(f'<tr style="background-color:#a0ffa0;"><td>{ln}</td><td>{data[file][ln]}</td><td><pre>{text}</pre></td></tr>\n')
+                hit += 1
+                total += 1
             elif text == '':
                 fho.write(f'<tr><td>{ln}</td><td>-</td><td><pre>{text}</pre></td></tr>\n')
             else:
                 fho.write(f'<tr style="background-color:#ff6060;"><td>{ln}</td><td>-</td><td><pre>{text}</pre></td></tr>\n')
+                total += 1
 
         fho.write('</table>\n')
+
+        fhi.write(f' (lines: {hit * 100 / total:.2f}%)\n')
 
         fho.write('</body>\n')
         fho.write('</html>\n')
